@@ -228,6 +228,38 @@ export const backgroundNames: Record<BackgroundType, string> = {
   custom: '自訂',
 };
 
+/** 開銷分類的顯示名稱與 emoji（對應 FRP 的 expenseCategoryName） */
+export const expenseCategoryMeta: Record<ExpenseCategory, { label: string; emoji: string }> = {
+  food: { label: '餐飲', emoji: '🍜' },
+  transport: { label: '交通', emoji: '🚃' },
+  accommodation: { label: '住宿', emoji: '🏨' },
+  shopping: { label: '購物', emoji: '🛍️' },
+  entertainment: { label: '娛樂', emoji: '🎡' },
+  ticket: { label: '門票', emoji: '🎫' },
+  other: { label: '其他', emoji: '📦' },
+};
+
+/** 常用幣別 */
+export const currencies = ['TWD', 'JPY', 'KRW', 'USD', 'EUR', 'CNY', 'THB', 'SGD'] as const;
+
+/** 建立一筆開銷紀錄 */
+export function createExpense(params: {
+  tripId: string;
+  amount: number;
+  currency: string;
+  category: ExpenseCategory;
+  description: string;
+  paidById: string;
+  splitWithIds: string[];
+  date: string;
+}): ExpenseRecord {
+  return {
+    id: uuid(),
+    createdAt: new Date().toISOString(),
+    ...params,
+  };
+}
+
 export const templateNames: Record<TemplateType, string> = {
   basic: '基本',
   adventure: '冒險',

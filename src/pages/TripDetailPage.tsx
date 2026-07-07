@@ -14,7 +14,7 @@ interface ModuleDef {
 const modules: ModuleDef[] = [
   { key: 'itinerary', name: '行程表', emoji: '🗓️', ready: true },
   { key: 'transportation', name: '交通路線', emoji: '🚆', ready: false },
-  { key: 'expenses', name: '記帳', emoji: '💰', ready: false },
+  { key: 'expenses', name: '記帳', emoji: '💰', ready: true },
   { key: 'packing', name: '行李清單', emoji: '🎒', ready: false },
   { key: 'souvenir', name: '伴手禮', emoji: '🎁', ready: false },
 ];
@@ -22,10 +22,11 @@ const modules: ModuleDef[] = [
 export default function TripDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const trip = useLiveQuery(() => (id ? db.trips.get(id) : undefined), [id]);
+  // trip：undefined = 載入中，null = 找不到
+  const trip = useLiveQuery(async () => (id ? ((await db.trips.get(id)) ?? null) : null), [id]);
 
   if (trip === undefined) return null;
-  if (!trip) {
+  if (trip === null) {
     return (
       <div className="page">
         <div className="empty-state">

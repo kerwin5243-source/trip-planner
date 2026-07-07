@@ -422,6 +422,164 @@ body {
   box-shadow: 0 4px 14px rgba(26, 109, 171, 0.45);
 }
 
+/* ===== 記帳 ===== */
+.summary-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.summary-card h2 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.summary-card .hint {
+  margin: 0;
+}
+
+.totals {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.total-line {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.total-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.total-currency {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.member-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.member-chip {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.member-chip.add {
+  border-style: dashed;
+  color: var(--text-muted);
+}
+
+.split-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.split-chip {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.split-chip.selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.emoji-picker {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.emoji-option {
+  font-size: 1.3rem;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
+.emoji-option.selected {
+  border-color: var(--primary);
+  background: var(--bg);
+}
+
+.expense-emoji {
+  font-size: 1.4rem;
+}
+
+.expense-amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  align-self: center;
+}
+
+.settle-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.settle-card summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.settle-card ul {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.settle-card li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.settle-receive {
+  color: #059669;
+  font-weight: 600;
+}
+
+.settle-pay {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 /* ===== 空狀態 ===== */
 .empty-state {
   text-align: center;

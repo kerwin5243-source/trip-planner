@@ -174,12 +174,13 @@ function ItemForm({
 
 export default function ItineraryPage() {
   const { id } = useParams<{ id: string }>();
-  const trip = useLiveQuery(() => (id ? db.trips.get(id) : undefined), [id]);
+  // trip：undefined = 載入中，null = 找不到
+  const trip = useLiveQuery(async () => (id ? ((await db.trips.get(id)) ?? null) : null), [id]);
   const [dayIndex, setDayIndex] = useState(0);
   const [editing, setEditing] = useState<'new' | string | null>(null); // 'new' | itemId | null
 
   if (trip === undefined) return null;
-  if (!trip) {
+  if (trip === null) {
     return (
       <div className="page">
         <div className="empty-state">

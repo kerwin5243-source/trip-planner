@@ -693,6 +693,34 @@ body {
   font-size: 0.75rem;
 }
 
+/* ===== 伴手禮 ===== */
+.souvenir-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--card-bg);
+  cursor: pointer;
+  align-self: center;
+  flex: 0 0 auto;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.souvenir-check.checked {
+  background: #059669;
+  border-color: #059669;
+}
+
+.item-card.purchased .item-title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
 /* ===== 空狀態 ===== */
 .empty-state {
   text-align: center;

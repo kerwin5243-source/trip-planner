@@ -260,6 +260,36 @@ export function createExpense(params: {
   };
 }
 
+/**
+ * 預設行前準備項目（對應 FRP 的 getDefaultPackingItems）。
+ * id 用 tripId 組成固定值，重複 bulkPut 不會產生重複項目。
+ */
+export function defaultPackingItems(tripId: string): PackingItem[] {
+  const defaults: Array<{ key: string; name: string; icon: string; quantity?: number }> = [
+    { key: 'passport', name: '護照', icon: '🛂' },
+    { key: 'wallet', name: '錢包', icon: '👛' },
+    { key: 'visa', name: '簽證', icon: '📄' },
+    { key: 'toiletries', name: '盥洗用具', icon: '🧼' },
+    { key: 'clothes_1', name: '衣服', icon: '👕', quantity: 3 },
+    { key: 'charger', name: '充電器', icon: '🔌' },
+    { key: 'medicine', name: '常備藥品', icon: '💊' },
+    { key: 'umbrella', name: '雨具', icon: '☂️' },
+    { key: 'camera', name: '相機', icon: '📷' },
+    { key: 'ticket', name: '機票', icon: '✈️' },
+    { key: 'sunscreen', name: '防曬用品', icon: '☀️' },
+    { key: 'adapter', name: '轉接頭', icon: '⚡' },
+  ];
+  return defaults.map((d) => ({
+    id: `${tripId}:${d.key}`,
+    tripId,
+    name: d.name,
+    icon: d.icon,
+    isPacked: false,
+    quantity: d.quantity ?? 1,
+    isCustom: false,
+  }));
+}
+
 export const templateNames: Record<TemplateType, string> = {
   basic: '基本',
   adventure: '冒險',

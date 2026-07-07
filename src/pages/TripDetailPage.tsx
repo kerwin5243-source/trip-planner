@@ -15,7 +15,7 @@ const modules: ModuleDef[] = [
   { key: 'itinerary', name: '行程表', emoji: '🗓️', ready: true },
   { key: 'transportation', name: '交通路線', emoji: '🚆', ready: false },
   { key: 'expenses', name: '記帳', emoji: '💰', ready: true },
-  { key: 'packing', name: '行李清單', emoji: '🎒', ready: false },
+  { key: 'packing', name: '行李清單', emoji: '🎒', ready: true },
   { key: 'souvenir', name: '伴手禮', emoji: '🎁', ready: false },
 ];
 

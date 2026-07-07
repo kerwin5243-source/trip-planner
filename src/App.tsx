@@ -3,6 +3,7 @@ import ExpensesPage from './pages/ExpensesPage';
 import HomePage from './pages/HomePage';
 import ItineraryPage from './pages/ItineraryPage';
 import NewTripPage from './pages/NewTripPage';
+import PackingPage from './pages/PackingPage';
 import TripDetailPage from './pages/TripDetailPage';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/trip/:id" element={<TripDetailPage />} />
         <Route path="/trip/:id/itinerary" element={<ItineraryPage />} />
         <Route path="/trip/:id/expenses" element={<ExpensesPage />} />
+        <Route path="/trip/:id/packing" element={<PackingPage />} />
       </Routes>
     </BrowserRouter>
   );

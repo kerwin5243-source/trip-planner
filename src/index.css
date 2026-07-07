@@ -580,6 +580,119 @@ body {
   font-weight: 600;
 }
 
+/* ===== 行李清單 ===== */
+.edit-toggle {
+  margin-left: auto;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.edit-toggle.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 10px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #059669;
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.progress-text {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+}
+
+.text-btn {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 8px 0 0;
+}
+
+.packing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.packing-tile {
+  position: relative;
+  background: var(--card-bg);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.packing-tile.packed {
+  background: #ecfdf5;
+  border-color: #059669;
+}
+
+.packing-tile.add {
+  border: 2px dashed var(--border);
+  background: none;
+  box-shadow: none;
+  color: var(--text-muted);
+}
+
+.packing-icon {
+  font-size: 1.7rem;
+}
+
+.packing-name {
+  font-weight: 600;
+}
+
+.packing-check {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  color: #059669;
+  font-weight: 700;
+}
+
+.packing-check.edit {
+  font-size: 0.75rem;
+}
+
 /* ===== 空狀態 ===== */
 .empty-state {
   text-align: center;

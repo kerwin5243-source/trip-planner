@@ -721,6 +721,30 @@ body {
   color: var(--text-muted);
 }
 
+/* ===== 交通路線 ===== */
+.route-arrow {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.item-card.from-itinerary {
+  background: #f8fafc;
+  box-shadow: none;
+  border: 1px dashed var(--border);
+}
+
+.itinerary-badge {
+  align-self: flex-start;
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  padding: 2px 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
 /* ===== 空狀態 ===== */
 .empty-state {
   text-align: center;

@@ -5,6 +5,7 @@ import ItineraryPage from './pages/ItineraryPage';
 import NewTripPage from './pages/NewTripPage';
 import PackingPage from './pages/PackingPage';
 import SouvenirPage from './pages/SouvenirPage';
+import TransportationPage from './pages/TransportationPage';
 import TripDetailPage from './pages/TripDetailPage';
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/trip/:id/expenses" element={<ExpensesPage />} />
         <Route path="/trip/:id/packing" element={<PackingPage />} />
         <Route path="/trip/:id/souvenir" element={<SouvenirPage />} />
+        <Route path="/trip/:id/transportation" element={<TransportationPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -13,7 +13,7 @@ interface ModuleDef {
 /** 功能模組清單 — ready=false 的會顯示「即將推出」，之後一個一個補上 */
 const modules: ModuleDef[] = [
   { key: 'itinerary', name: '行程表', emoji: '🗓️', ready: true },
-  { key: 'transportation', name: '交通路線', emoji: '🚆', ready: false },
+  { key: 'transportation', name: '交通路線', emoji: '🚆', ready: true },
   { key: 'expenses', name: '記帳', emoji: '💰', ready: true },
   { key: 'packing', name: '行李清單', emoji: '🎒', ready: true },
   { key: 'souvenir', name: '伴手禮', emoji: '🎁', ready: true },

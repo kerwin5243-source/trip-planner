@@ -6,7 +6,14 @@
  * 第二階段接上帳號後端後，以 updatedAt 為基準做同步。
  */
 import Dexie, { type EntityTable } from 'dexie';
-import type { ExpenseMember, ExpenseRecord, PackingItem, Souvenir, Trip } from '../models/types';
+import type {
+  ExpenseMember,
+  ExpenseRecord,
+  PackingItem,
+  Souvenir,
+  TransportEntry,
+  Trip,
+} from '../models/types';
 
 const db = new Dexie('trip-planner') as Dexie & {
   trips: EntityTable<Trip, 'id'>;
@@ -14,6 +21,7 @@ const db = new Dexie('trip-planner') as Dexie & {
   expenseMembers: EntityTable<ExpenseMember, 'id'>;
   packingItems: EntityTable<PackingItem, 'id'>;
   souvenirs: EntityTable<Souvenir, 'id'>;
+  transports: EntityTable<TransportEntry, 'id'>;
 };
 
 db.version(1).stores({
@@ -24,6 +32,11 @@ db.version(1).stores({
   souvenirs: 'id, tripId',
 });
 
+// v2：新增交通路線表
+db.version(2).stores({
+  transports: 'id, tripId, date',
+});
+
 /** 更新旅行並自動蓋上 updatedAt */
 export async function saveTrip(trip: Trip): Promise<void> {
   await db.trips.put({ ...trip, updatedAt: new Date().toISOString() });
@@ -31,12 +44,17 @@ export async function saveTrip(trip: Trip): Promise<void> {
 
 /** 刪除旅行與其所有附屬資料 */
 export async function deleteTrip(tripId: string): Promise<void> {
-  await db.transaction('rw', [db.trips, db.expenses, db.packingItems, db.souvenirs], async () => {
-    await db.trips.delete(tripId);
-    await db.expenses.where('tripId').equals(tripId).delete();
-    await db.packingItems.where('tripId').equals(tripId).delete();
-    await db.souvenirs.where('tripId').equals(tripId).delete();
-  });
+  await db.transaction(
+    'rw',
+    [db.trips, db.expenses, db.packingItems, db.souvenirs, db.transports],
+    async () => {
+      await db.trips.delete(tripId);
+      await db.expenses.where('tripId').equals(tripId).delete();
+      await db.packingItems.where('tripId').equals(tripId).delete();
+      await db.souvenirs.where('tripId').equals(tripId).delete();
+      await db.transports.where('tripId').equals(tripId).delete();
+    },
+  );
 }
 
 export { db };

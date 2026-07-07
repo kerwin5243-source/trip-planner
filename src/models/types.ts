@@ -106,6 +106,45 @@ export interface ExpenseRecord {
 }
 
 /* ============================
+ * 交通路線模型
+ * ============================
+ * FRP 原版只有 type/from/to/note 且未持久化；Web 版補上日期與時間並存入資料庫。
+ */
+
+export type TransportType =
+  | 'flight'
+  | 'train'
+  | 'bus'
+  | 'metro'
+  | 'taxi'
+  | 'walk'
+  | 'drive'
+  | 'other';
+
+export const transportTypeMeta: Record<TransportType, { label: string; emoji: string }> = {
+  flight: { label: '飛機', emoji: '✈️' },
+  train: { label: '火車', emoji: '🚄' },
+  bus: { label: '公車', emoji: '🚌' },
+  metro: { label: '捷運', emoji: '🚇' },
+  taxi: { label: '計程車', emoji: '🚕' },
+  walk: { label: '步行', emoji: '🚶' },
+  drive: { label: '自駕', emoji: '🚗' },
+  other: { label: '其他', emoji: '🧭' },
+};
+
+export interface TransportEntry {
+  id: string;
+  tripId: string;
+  date: string; // yyyy-MM-dd
+  departTime: string; // "HH:mm"，可為空字串
+  type: TransportType;
+  from: string; // 出發地
+  to: string; // 目的地
+  note: string; // 備註（例如：新幹線自由席）
+  createdAt: string;
+}
+
+/* ============================
  * 行前準備清單模型
  * ============================ */
 

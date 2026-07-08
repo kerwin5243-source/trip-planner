@@ -23,8 +23,9 @@ function TripCard({ trip }: { trip: Trip }) {
   } else if (trip.endDate < today) {
     badge = `${-daysUntil(trip.endDate)} 天前`;
   } else {
-    badge = '進行中 ✈️';
+    badge = `第 ${-daysUntil(trip.startDate) + 1} 天 ✈️`;
   }
+  const itemCount = trip.daySchedules.reduce((n, d) => n + d.items.length, 0);
   return (
     <Link
       to={`/trip/${trip.id}`}
@@ -35,7 +36,11 @@ function TripCard({ trip }: { trip: Trip }) {
       <h3>{trip.title}</h3>
       <p className="mono">
         {formatRange(trip)} · {totalDays(trip)} 天
+        {itemCount > 0 && ` · ${itemCount} 個行程`}
       </p>
+      {trip.destination && (
+        <span className="trip-card-destination">📍 {trip.destination.name.split(',')[0]}</span>
+      )}
     </Link>
   );
 }

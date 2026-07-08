@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import ToastHost from './components/ToastHost';
 import { silentSync } from './lib/sync';
 import AccountPage from './pages/AccountPage';
 import ExpensesPage from './pages/ExpensesPage';
@@ -20,6 +21,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <ToastHost />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/map" element={<MapPage />} />

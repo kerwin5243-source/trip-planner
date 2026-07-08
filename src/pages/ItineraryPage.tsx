@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import PlaceSearch from '../components/PlaceSearch';
 import { db, saveTrip } from '../db/db';
 import { fetchDailyWeather, weatherMeta, type DayWeather } from '../lib/geo';
+import { toast } from '../lib/toast';
 import {
   itineraryTypeMeta,
   uuid,
@@ -17,6 +18,13 @@ const weekdayNames = ['日', '一', '二', '三', '四', '五', '六'];
 function formatDay(dateISO: string): string {
   const d = new Date(`${dateISO}T00:00:00`);
   return `${d.getMonth() + 1}/${d.getDate()} (${weekdayNames[d.getDay()]})`;
+}
+
+/** "HH:mm" 加上分鐘數（超過午夜就繞回） */
+function addMinutes(time: string, minutes: number): string {
+  const [h, m] = time.split(':').map(Number);
+  const total = (h * 60 + m + minutes) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
 const emptyDraft = {
@@ -40,26 +48,41 @@ type Draft = typeof emptyDraft;
 
 function ItemForm({
   initial,
+  dayLabels,
+  initialDayIdx,
   onSave,
   onCancel,
 }: {
   initial: Draft;
-  onSave: (draft: Draft) => void;
+  dayLabels: string[]; // 供跨天搬移的日期選單
+  initialDayIdx: number;
+  onSave: (draft: Draft, targetDayIdx: number) => void;
   onCancel: () => void;
 }) {
   const [draft, setDraft] = useState<Draft>(initial);
+  const [dayIdx, setDayIdx] = useState(initialDayIdx);
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!draft.title.trim()) return;
-    onSave({ ...draft, title: draft.title.trim() });
+    onSave({ ...draft, title: draft.title.trim() }, dayIdx);
   }
 
   return (
     <form className="form item-form" onSubmit={handleSubmit}>
       <div className="form-row">
+        <label>
+          日期
+          <select value={dayIdx} onChange={(e) => setDayIdx(Number(e.target.value))}>
+            {dayLabels.map((label, i) => (
+              <option key={i} value={i}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label>
           抵達時間
           <input
@@ -68,20 +91,21 @@ function ItemForm({
             onChange={(e) => set('arrivalTime', e.target.value)}
           />
         </label>
-        <label>
-          種類
-          <select
-            value={draft.type}
-            onChange={(e) => set('type', e.target.value as ItineraryItemType)}
-          >
-            {(Object.keys(itineraryTypeMeta) as ItineraryItemType[]).map((t) => (
-              <option key={t} value={t}>
-                {itineraryTypeMeta[t].emoji} {itineraryTypeMeta[t].label}
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
+
+      <label>
+        種類
+        <select
+          value={draft.type}
+          onChange={(e) => set('type', e.target.value as ItineraryItemType)}
+        >
+          {(Object.keys(itineraryTypeMeta) as ItineraryItemType[]).map((t) => (
+            <option key={t} value={t}>
+              {itineraryTypeMeta[t].emoji} {itineraryTypeMeta[t].label}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <label>
         標題
@@ -235,22 +259,31 @@ export default function ItineraryPage() {
     await saveTrip({ ...t, daySchedules });
   }
 
-  async function handleSave(draft: Draft) {
-    if (editing === 'new') {
-      const item: ItineraryItem = { id: uuid(), ...draft };
-      await updateDayItems(trip!, [...day.items, item]);
-    } else if (editing) {
-      await updateDayItems(
-        trip!,
-        day.items.map((it) => (it.id === editing ? { ...it, ...draft } : it)),
-      );
-    }
+  async function handleSave(draft: Draft, targetDayIdx: number) {
+    const t = trip!;
+    const item: ItineraryItem =
+      editing === 'new'
+        ? { id: uuid(), ...draft }
+        : { ...day.items.find((it) => it.id === editing)!, ...draft };
+    // 從所有天移除同 id 的項目，再放進目標天（同天編輯與跨天搬移都適用）
+    const daySchedules = t.daySchedules.map((d, i) => {
+      const items = d.items.filter((it) => it.id !== item.id);
+      return i === targetDayIdx ? { ...d, items: [...items, item] } : { ...d, items };
+    });
+    await saveTrip({ ...t, daySchedules });
     setEditing(null);
+    if (targetDayIdx !== safeDayIndex) {
+      setDayIndex(targetDayIdx);
+      toast(`已移到 Day ${targetDayIdx + 1}`);
+    } else {
+      toast(editing === 'new' ? '已加入行程' : '已儲存');
+    }
   }
 
   async function handleDelete(itemId: string) {
     if (!window.confirm('確定要刪除這個行程項目嗎？')) return;
     await updateDayItems(trip!, day.items.filter((it) => it.id !== itemId));
+    toast('已刪除');
   }
 
   const editingItem = editing && editing !== 'new' ? day.items.find((i) => i.id === editing) : null;
@@ -300,6 +333,8 @@ export default function ItineraryPage() {
       {editing !== null ? (
         <ItemForm
           initial={editingItem ? { ...emptyDraft, ...editingItem } : emptyDraft}
+          dayLabels={trip.daySchedules.map((d, i) => `Day ${i + 1} · ${formatDay(d.date)}`)}
+          initialDayIdx={safeDayIndex}
           onSave={handleSave}
           onCancel={() => setEditing(null)}
         />
@@ -312,43 +347,54 @@ export default function ItineraryPage() {
             </div>
           )}
 
-          <ul className="item-list">
-            {sortedItems.map((item) => (
-              <li key={item.id} className={`item-card ${item.isSplash ? 'splash' : ''}`}>
-                <div className="item-time">{item.arrivalTime}</div>
-                <div className="item-body">
-                  <div className="item-title">
-                    {itineraryTypeMeta[item.type].emoji} {item.title}
-                    {item.isSplash && ' ⭐'}
-                  </div>
-                  <div className="item-meta">
-                    停留 {item.durationMinutes} 分鐘
-                    {item.address && ` · ${item.address}`}
-                  </div>
-                  {item.description && <div className="item-desc">{item.description}</div>}
-                  {item.url && (
-                    <a href={item.url} target="_blank" rel="noreferrer" className="item-link">
-                      🔗 網站
-                    </a>
-                  )}
-                  {item.lat !== undefined && item.lon !== undefined && (
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lon}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="item-link"
-                    >
-                      🧭 導航
-                    </a>
-                  )}
+          <ul className="timeline">
+            {sortedItems.map((item, idx) => (
+              <li key={item.id} className="timeline-row">
+                <div className="timeline-time">
+                  <span className="mono timeline-start">{item.arrivalTime}</span>
+                  <span className="mono timeline-end">
+                    {addMinutes(item.arrivalTime, item.durationMinutes)}
+                  </span>
                 </div>
-                <div className="item-actions">
-                  <button type="button" onClick={() => setEditing(item.id)} aria-label="編輯">
-                    ✏️
-                  </button>
-                  <button type="button" onClick={() => handleDelete(item.id)} aria-label="刪除">
-                    🗑️
-                  </button>
+                <div className="timeline-node">
+                  <span className={`timeline-dot ${item.isSplash ? 'splash' : ''}`} />
+                  {idx < sortedItems.length - 1 && <span className="timeline-line" />}
+                </div>
+                <div className={`item-card timeline-card ${item.isSplash ? 'splash' : ''}`}>
+                  <div className="item-body">
+                    <div className="item-title">
+                      {itineraryTypeMeta[item.type].emoji} {item.title}
+                      {item.isSplash && ' ⭐'}
+                    </div>
+                    <div className="item-meta">
+                      停留 {item.durationMinutes} 分鐘
+                      {item.address && ` · ${item.address}`}
+                    </div>
+                    {item.description && <div className="item-desc">{item.description}</div>}
+                    {item.url && (
+                      <a href={item.url} target="_blank" rel="noreferrer" className="item-link">
+                        🔗 網站
+                      </a>
+                    )}
+                    {item.lat !== undefined && item.lon !== undefined && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lon}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="item-link"
+                      >
+                        🧭 導航
+                      </a>
+                    )}
+                  </div>
+                  <div className="item-actions">
+                    <button type="button" onClick={() => setEditing(item.id)} aria-label="編輯">
+                      ✏️
+                    </button>
+                    <button type="button" onClick={() => handleDelete(item.id)} aria-label="刪除">
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               </li>
             ))}

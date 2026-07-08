@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import PlaceSearch from '../components/PlaceSearch';
 import { saveTrip } from '../db/db';
 import { db } from '../db/db';
+import { toast } from '../lib/toast';
 import {
   backgroundGradients,
   backgroundNames,
@@ -106,6 +107,7 @@ export default function NewTripPage() {
         destination,
         daySchedules,
       });
+      toast('已儲存變更');
       navigate(`/trip/${existing.id}`, { replace: true });
     } else {
       const trip = createTrip({
@@ -116,6 +118,7 @@ export default function NewTripPage() {
         backgroundType,
       });
       await saveTrip({ ...trip, destination });
+      toast('旅程建立完成 ✈️');
       navigate(`/trip/${trip.id}`, { replace: true });
     }
   }

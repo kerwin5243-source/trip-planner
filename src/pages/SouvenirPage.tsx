@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { db } from '../db/db';
+import { toast } from '../lib/toast';
 import { uuid, type Souvenir } from '../models/types';
 
 const DEFAULT_REGION = '未分類';
@@ -194,6 +195,7 @@ export default function SouvenirPage() {
       });
     }
     setEditing(null);
+    toast('已儲存 🎁');
   }
 
   async function togglePurchased(s: Souvenir) {
@@ -203,6 +205,7 @@ export default function SouvenirPage() {
   async function handleDelete(s: Souvenir) {
     if (!window.confirm(`確定要刪除「${s.name}」嗎？`)) return;
     await db.souvenirs.delete(s.id);
+    toast('已刪除');
   }
 
   return (

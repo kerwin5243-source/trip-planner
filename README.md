@@ -48,8 +48,10 @@ JWT_SECRET=$(openssl rand -hex 32) docker compose up -d --build
 
 ## 待辦
 
-- [ ] PNG 版 app icon（iOS 主畫面 apple-touch-icon 不吃 SVG，目前 iOS 安裝後 icon 會是預設截圖）
-- [ ] 行程項目拖曳排序、跨日移動（參考 TREK）
+- [x] PNG 版 app icon（apple-touch-icon 180 + manifest 512/maskable）
+- [x] 行程項目跨日移動（編輯表單選日期）
+- [ ] 行程項目拖曳排序
+- [ ] PDF 匯出、AI 行程生成（第四階段剩餘項目）
 
 ## 相關專案
 

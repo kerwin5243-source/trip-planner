@@ -1,29 +1,33 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db, deleteTrip } from '../db/db';
+import { toast } from '../lib/toast';
 import { backgroundGradients, totalDays } from '../models/types';
-
-interface ModuleDef {
-  key: string;
-  name: string;
-  emoji: string;
-  ready: boolean;
-}
-
-/** 功能模組清單 — ready=false 的會顯示「即將推出」，之後一個一個補上 */
-const modules: ModuleDef[] = [
-  { key: 'itinerary', name: '行程表', emoji: '🗓️', ready: true },
-  { key: 'transportation', name: '交通路線', emoji: '🚆', ready: true },
-  { key: 'expenses', name: '記帳', emoji: '💰', ready: true },
-  { key: 'packing', name: '行李清單', emoji: '🎒', ready: true },
-  { key: 'souvenir', name: '伴手禮', emoji: '🎁', ready: true },
-];
 
 export default function TripDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   // trip：undefined = 載入中，null = 找不到
   const trip = useLiveQuery(async () => (id ? ((await db.trips.get(id)) ?? null) : null), [id]);
+
+  // 各模組即時統計，讓儀表板一眼看到進度
+  const stats = useLiveQuery(async () => {
+    if (!id) return null;
+    const [expenseCount, packing, souvenirs, transportCount] = await Promise.all([
+      db.expenses.where('tripId').equals(id).count(),
+      db.packingItems.where('tripId').equals(id).toArray(),
+      db.souvenirs.where('tripId').equals(id).toArray(),
+      db.transports.where('tripId').equals(id).count(),
+    ]);
+    return {
+      expenseCount,
+      packedCount: packing.filter((p) => p.isPacked).length,
+      packingTotal: packing.length,
+      purchasedCount: souvenirs.filter((s) => s.isPurchased).length,
+      souvenirTotal: souvenirs.length,
+      transportCount,
+    };
+  }, [id]);
 
   if (trip === undefined) return null;
   if (trip === null) {
@@ -38,10 +42,55 @@ export default function TripDetailPage() {
   }
 
   const itemCount = trip.daySchedules.reduce((n, d) => n + d.items.length, 0);
+  const itineraryTransportCount = trip.daySchedules.reduce(
+    (n, d) => n + d.items.filter((it) => it.type === 'transport').length,
+    0,
+  );
+
+  const modules = [
+    {
+      key: 'itinerary',
+      name: '行程表',
+      emoji: '🗓️',
+      stat: itemCount > 0 ? `${itemCount} 個項目` : '開始安排',
+    },
+    {
+      key: 'transportation',
+      name: '交通路線',
+      emoji: '🚆',
+      stat:
+        (stats?.transportCount ?? 0) + itineraryTransportCount > 0
+          ? `${(stats?.transportCount ?? 0) + itineraryTransportCount} 段路線`
+          : '尚未記錄',
+    },
+    {
+      key: 'expenses',
+      name: '記帳',
+      emoji: '💰',
+      stat: stats?.expenseCount ? `${stats.expenseCount} 筆開銷` : '尚未記帳',
+    },
+    {
+      key: 'packing',
+      name: '行李清單',
+      emoji: '🎒',
+      stat: stats?.packingTotal
+        ? `已備妥 ${stats.packedCount}/${stats.packingTotal}`
+        : '開始準備',
+    },
+    {
+      key: 'souvenir',
+      name: '伴手禮',
+      emoji: '🎁',
+      stat: stats?.souvenirTotal
+        ? `已買 ${stats.purchasedCount}/${stats.souvenirTotal}`
+        : '尚無清單',
+    },
+  ];
 
   async function handleDelete() {
     if (!window.confirm(`確定要刪除「${trip!.title}」嗎？此動作無法復原。`)) return;
     await deleteTrip(trip!.id);
+    toast('旅程已刪除');
     navigate('/', { replace: true });
   }
 
@@ -59,23 +108,19 @@ export default function TripDetailPage() {
           {trip.startDate.replaceAll('-', '.')} – {trip.endDate.replaceAll('-', '.')} ·{' '}
           {totalDays(trip)} 天 · {itemCount} 個行程
         </p>
+        {trip.destination && (
+          <span className="banner-destination">📍 {trip.destination.name.split(',')[0]}</span>
+        )}
       </div>
 
       <div className="module-grid">
-        {modules.map((m) =>
-          m.ready ? (
-            <Link key={m.key} to={`/trip/${trip.id}/${m.key}`} className="module-tile">
-              <span className="module-emoji">{m.emoji}</span>
-              <span>{m.name}</span>
-            </Link>
-          ) : (
-            <div key={m.key} className="module-tile disabled">
-              <span className="module-emoji">{m.emoji}</span>
-              <span>{m.name}</span>
-              <span className="coming-soon">即將推出</span>
-            </div>
-          ),
-        )}
+        {modules.map((m) => (
+          <Link key={m.key} to={`/trip/${trip.id}/${m.key}`} className="module-tile">
+            <span className="module-emoji">{m.emoji}</span>
+            <span>{m.name}</span>
+            <span className="module-stat mono">{m.stat}</span>
+          </Link>
+        ))}
       </div>
 
       <button type="button" className="btn-danger" onClick={handleDelete}>

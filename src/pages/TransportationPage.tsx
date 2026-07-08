@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { db } from '../db/db';
+import { toast } from '../lib/toast';
 import {
   itineraryTypeMeta,
   todayISO,
@@ -193,11 +194,13 @@ export default function TransportationPage() {
       await db.transports.put({ ...editingEntry, ...draft });
     }
     setEditing(null);
+    toast('已儲存 🚆');
   }
 
   async function handleDelete(entry: TransportEntry) {
     if (!window.confirm(`確定要刪除「${entry.from} → ${entry.to}」嗎？`)) return;
     await db.transports.delete(entry.id);
+    toast('已刪除');
   }
 
   return (

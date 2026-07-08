@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { db } from '../db/db';
+import { toast } from '../lib/toast';
 import {
   createExpense,
   currencies,
@@ -384,11 +385,13 @@ export default function ExpensesPage() {
       });
     }
     setEditing(null);
+    toast('已記一筆 💰');
   }
 
   async function handleDelete(expenseId: string) {
     if (!window.confirm('確定要刪除這筆開銷嗎？')) return;
     await db.expenses.delete(expenseId);
+    toast('已刪除');
   }
 
   async function handleDeleteMember(member: ExpenseMember) {

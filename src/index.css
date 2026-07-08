@@ -1221,6 +1221,208 @@ body {
   color: var(--danger);
 }
 
+/* ===== Toast ===== */
+.toast-host {
+  position: fixed;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 500;
+  pointer-events: none;
+}
+
+.toast {
+  background: rgba(27, 36, 64, 0.92);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 10px 22px;
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(27, 36, 64, 0.35);
+  backdrop-filter: blur(8px);
+  animation: toast-in 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.toast.leaving {
+  animation: toast-out 0.3s ease forwards;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* ===== 行程時間軸 ===== */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timeline-row {
+  display: flex;
+  gap: 10px;
+}
+
+.timeline-time {
+  flex: 0 0 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-top: 16px;
+  gap: 2px;
+}
+
+.timeline-start {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+.timeline-end {
+  font-size: 0.7rem;
+  color: var(--ink2);
+}
+
+.timeline-node {
+  flex: 0 0 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+}
+
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px rgba(76, 127, 214, 0.35);
+  flex: 0 0 auto;
+}
+
+.timeline-dot.splash {
+  background: var(--gold);
+  box-shadow: 0 0 0 2px rgba(200, 155, 75, 0.45);
+}
+
+.timeline-line {
+  width: 2px;
+  flex: 1;
+  margin: 4px 0 -14px;
+  background: linear-gradient(180deg, rgba(76, 127, 214, 0.4), rgba(76, 127, 214, 0.12));
+  border-radius: 1px;
+}
+
+.timeline-card {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ===== 模組磚統計 ===== */
+.module-stat {
+  font-size: 0.68rem;
+  color: var(--ink2);
+  font-weight: 500;
+}
+
+.banner-destination {
+  position: relative;
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  padding: 3px 12px;
+  backdrop-filter: blur(4px);
+}
+
+.trip-card-destination {
+  position: relative;
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+/* ===== 進場動畫 ===== */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.trip-card,
+.module-tile,
+.summary-card,
+.item-card,
+.timeline-row,
+.packing-tile,
+.hero-stat,
+.form {
+  animation: fade-up 0.35s ease both;
+}
+
+.trip-card:nth-child(2),
+.module-tile:nth-child(2),
+.timeline-row:nth-child(2),
+.hero-stat:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.trip-card:nth-child(3),
+.module-tile:nth-child(3),
+.timeline-row:nth-child(3),
+.hero-stat:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.module-tile:nth-child(4),
+.timeline-row:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+.module-tile:nth-child(5),
+.timeline-row:nth-child(n + 5) {
+  animation-delay: 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 /* ===== 空狀態 ===== */
 .empty-state {
   text-align: center;

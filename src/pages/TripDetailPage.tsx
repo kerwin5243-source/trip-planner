@@ -51,9 +51,12 @@ export default function TripDetailPage() {
         <Link to="/" className="back-btn on-banner" aria-label="返回">
           ‹
         </Link>
+        <Link to={`/trip/${trip.id}/edit`} className="banner-edit" aria-label="編輯旅程">
+          編輯
+        </Link>
         <h1>{trip.title}</h1>
-        <p>
-          {trip.startDate.replaceAll('-', '/')} ～ {trip.endDate.replaceAll('-', '/')} ·{' '}
+        <p className="mono">
+          {trip.startDate.replaceAll('-', '.')} – {trip.endDate.replaceAll('-', '.')} ·{' '}
           {totalDays(trip)} 天 · {itemCount} 個行程
         </p>
       </div>

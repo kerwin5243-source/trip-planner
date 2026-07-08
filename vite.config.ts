@@ -36,7 +36,7 @@ export default defineConfig({
       workbox: {
         // SPA：所有路由都回到 index.html，離線時也能開任何頁面
         navigateFallback: '/index.html',
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,json,woff2}'],
       },
     }),
   ],

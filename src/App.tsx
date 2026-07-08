@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import ExpensesPage from './pages/ExpensesPage';
 import HomePage from './pages/HomePage';
+import MapPage from './pages/MapPage';
 import ItineraryPage from './pages/ItineraryPage';
 import NewTripPage from './pages/NewTripPage';
 import PackingPage from './pages/PackingPage';
@@ -13,7 +14,9 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/map" element={<MapPage />} />
         <Route path="/new" element={<NewTripPage />} />
+        <Route path="/trip/:id/edit" element={<NewTripPage />} />
         <Route path="/trip/:id" element={<TripDetailPage />} />
         <Route path="/trip/:id/itinerary" element={<ItineraryPage />} />
         <Route path="/trip/:id/expenses" element={<ExpensesPage />} />

@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router-dom';
+import BottomNav from '../components/BottomNav';
 import { db } from '../db/db';
 import { backgroundGradients, todayISO, totalDays, type Trip } from '../models/types';
 
@@ -10,15 +11,19 @@ function daysUntil(dateISO: string): number {
   return Math.round(ms / 86400000);
 }
 
+function formatRange(trip: Trip): string {
+  return `${trip.startDate.replaceAll('-', '.')} – ${trip.endDate.replaceAll('-', '.')}`;
+}
+
 function TripCard({ trip }: { trip: Trip }) {
   const today = todayISO();
   let badge: string;
   if (trip.startDate > today) {
-    badge = `倒數 ${daysUntil(trip.startDate)} 天`;
+    badge = `D-${daysUntil(trip.startDate)}`;
   } else if (trip.endDate < today) {
     badge = `${-daysUntil(trip.endDate)} 天前`;
   } else {
-    badge = '旅程進行中 ✈️';
+    badge = '進行中 ✈️';
   }
   return (
     <Link
@@ -28,9 +33,8 @@ function TripCard({ trip }: { trip: Trip }) {
     >
       <span className="trip-card-badge">{badge}</span>
       <h3>{trip.title}</h3>
-      <p>
-        {trip.startDate.replaceAll('-', '/')} ～ {trip.endDate.replaceAll('-', '/')} ·{' '}
-        {totalDays(trip)} 天
+      <p className="mono">
+        {formatRange(trip)} · {totalDays(trip)} 天
       </p>
     </Link>
   );
@@ -50,17 +54,36 @@ function Section({ title, trips }: { title: string; trips: Trip[] }) {
 
 export default function HomePage() {
   const trips = useLiveQuery(() => db.trips.orderBy('startDate').toArray(), []);
+  const visitedCount = useLiveQuery(() => db.visitedCountries.count(), []);
   if (!trips) return null;
 
   const today = todayISO();
   const ongoing = trips.filter((t) => t.startDate <= today && t.endDate >= today);
   const upcoming = trips.filter((t) => t.startDate > today);
   const past = trips.filter((t) => t.endDate < today).reverse();
+  const nextTrip = upcoming[0];
 
   return (
-    <div className="page">
-      <header className="app-header">
+    <div className="page with-nav">
+      <header className="hero">
+        <p className="hero-eyebrow">TRIP PLANNER</p>
         <h1>我的旅程</h1>
+        <div className="hero-stats">
+          <div className="hero-stat">
+            <span className="hero-stat-num mono">{trips.length}</span>
+            <span className="hero-stat-label">趟旅程</span>
+          </div>
+          <div className="hero-stat">
+            <span className="hero-stat-num mono">{visitedCount ?? 0}</span>
+            <span className="hero-stat-label">個國家</span>
+          </div>
+          <div className="hero-stat">
+            <span className="hero-stat-num mono">
+              {nextTrip ? `D-${daysUntil(nextTrip.startDate)}` : '—'}
+            </span>
+            <span className="hero-stat-label">下次出發</span>
+          </div>
+        </div>
       </header>
 
       {trips.length === 0 && (
@@ -78,6 +101,8 @@ export default function HomePage() {
       <Link to="/new" className="fab" aria-label="新增旅程">
         ＋
       </Link>
+
+      <BottomNav />
     </div>
   );
 }

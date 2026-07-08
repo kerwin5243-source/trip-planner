@@ -176,6 +176,16 @@ export interface Souvenir {
 }
 
 /* ============================
+ * 世界地圖迷霧模型
+ * ============================ */
+
+export interface VisitedCountry {
+  code: string; // ISO 3166-1 alpha-2（例如 JP、KR）
+  name: string; // 顯示名稱（記錄當下的中文名）
+  visitedAt: string; // 標記時間
+}
+
+/* ============================
  * 工廠函式與輔助工具
  * ============================ */
 

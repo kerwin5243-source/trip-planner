@@ -1,13 +1,17 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { saveTrip } from '../db/db';
+import { db } from '../db/db';
 import {
   backgroundGradients,
   backgroundNames,
   createTrip,
+  dateRange,
   templateNames,
   todayISO,
   type BackgroundType,
+  type DaySchedule,
   type TemplateType,
 } from '../models/types';
 
@@ -15,14 +19,48 @@ const backgroundOptions = (Object.keys(backgroundNames) as BackgroundType[]).fil
   (b) => b !== 'custom',
 );
 
+/** 建立新旅程與編輯既有旅程共用的表單頁（有 :id 參數 = 編輯模式） */
 export default function NewTripPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEdit = Boolean(id);
+  // 編輯模式時載入旅程；undefined = 載入中，null = 找不到
+  const existing = useLiveQuery(
+    async () => (id ? ((await db.trips.get(id)) ?? null) : null),
+    [id],
+  );
+
   const [title, setTitle] = useState('');
   const [startDate, setStartDate] = useState(todayISO());
   const [endDate, setEndDate] = useState(todayISO());
   const [templateType, setTemplateType] = useState<TemplateType>('basic');
   const [backgroundType, setBackgroundType] = useState<BackgroundType>('ocean');
   const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
+
+  // 編輯模式：把既有資料帶進表單（只做一次）
+  useEffect(() => {
+    if (isEdit && existing && !loaded) {
+      setTitle(existing.title);
+      setStartDate(existing.startDate);
+      setEndDate(existing.endDate);
+      setTemplateType(existing.templateType);
+      setBackgroundType(existing.backgroundType);
+      setLoaded(true);
+    }
+  }, [isEdit, existing, loaded]);
+
+  if (isEdit && existing === undefined) return null;
+  if (isEdit && existing === null) {
+    return (
+      <div className="page">
+        <div className="empty-state">
+          <p>找不到這趟旅程</p>
+          <Link to="/">回首頁</Link>
+        </div>
+      </div>
+    );
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -34,18 +72,56 @@ export default function NewTripPage() {
       setError('結束日期不能早於開始日期');
       return;
     }
-    const trip = createTrip({ title: title.trim(), startDate, endDate, templateType, backgroundType });
-    await saveTrip(trip);
-    navigate(`/trip/${trip.id}`, { replace: true });
+
+    if (isEdit && existing) {
+      // 日期變動時：同日期的行程保留，新日期補空白；被移除的日期若有行程先確認
+      const byDate = new Map(existing.daySchedules.map((d) => [d.date, d]));
+      const newDates = dateRange(startDate, endDate);
+      const dropped = existing.daySchedules.filter(
+        (d) => !newDates.includes(d.date) && d.items.length > 0,
+      );
+      if (dropped.length > 0) {
+        const total = dropped.reduce((n, d) => n + d.items.length, 0);
+        if (
+          !window.confirm(
+            `新的日期範圍不包含 ${dropped.length} 天已排好的行程（共 ${total} 個項目），這些行程將被刪除。確定要繼續嗎？`,
+          )
+        )
+          return;
+      }
+      const daySchedules: DaySchedule[] = newDates.map(
+        (date) => byDate.get(date) ?? { date, items: [], highlightImages: [] },
+      );
+      await saveTrip({
+        ...existing,
+        title: title.trim(),
+        startDate,
+        endDate,
+        templateType,
+        backgroundType,
+        daySchedules,
+      });
+      navigate(`/trip/${existing.id}`, { replace: true });
+    } else {
+      const trip = createTrip({
+        title: title.trim(),
+        startDate,
+        endDate,
+        templateType,
+        backgroundType,
+      });
+      await saveTrip(trip);
+      navigate(`/trip/${trip.id}`, { replace: true });
+    }
   }
 
   return (
     <div className="page">
       <header className="app-header">
-        <Link to="/" className="back-btn" aria-label="返回">
+        <Link to={isEdit ? `/trip/${id}` : '/'} className="back-btn" aria-label="返回">
           ‹
         </Link>
-        <h1>建立新旅程</h1>
+        <h1>{isEdit ? '編輯旅程' : '建立新旅程'}</h1>
       </header>
 
       <form className="form" onSubmit={handleSubmit}>
@@ -56,7 +132,7 @@ export default function NewTripPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="例如：四國遍路之旅"
-            autoFocus
+            autoFocus={!isEdit}
           />
         </label>
 
@@ -106,7 +182,7 @@ export default function NewTripPage() {
         {error && <p className="form-error">{error}</p>}
 
         <button type="submit" className="btn-primary">
-          建立旅程
+          {isEdit ? '儲存變更' : '建立旅程'}
         </button>
       </form>
     </div>

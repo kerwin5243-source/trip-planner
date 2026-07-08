@@ -13,6 +13,7 @@ import type {
   Souvenir,
   TransportEntry,
   Trip,
+  VisitedCountry,
 } from '../models/types';
 
 const db = new Dexie('trip-planner') as Dexie & {
@@ -22,6 +23,7 @@ const db = new Dexie('trip-planner') as Dexie & {
   packingItems: EntityTable<PackingItem, 'id'>;
   souvenirs: EntityTable<Souvenir, 'id'>;
   transports: EntityTable<TransportEntry, 'id'>;
+  visitedCountries: EntityTable<VisitedCountry, 'code'>;
 };
 
 db.version(1).stores({
@@ -35,6 +37,11 @@ db.version(1).stores({
 // v2：新增交通路線表
 db.version(2).stores({
   transports: 'id, tripId, date',
+});
+
+// v3：世界地圖迷霧 — 去過的國家
+db.version(3).stores({
+  visitedCountries: 'code',
 });
 
 /** 更新旅行並自動蓋上 updatedAt */

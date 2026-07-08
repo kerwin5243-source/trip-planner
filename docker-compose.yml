@@ -1,0 +1,17 @@
+# 部署到自架伺服器（例如 trek-server VM）：
+#   JWT_SECRET=隨機長字串 docker compose up -d --build
+# 之後手機/電腦開 http://<Tailscale IP>:8787 即可使用（含帳號同步）。
+services:
+  trip-planner:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: trip-planner
+    ports:
+      - '8787:8787'
+    environment:
+      - JWT_SECRET=${JWT_SECRET:?請設定 JWT_SECRET 環境變數}
+      - ALLOW_REGISTRATION=${ALLOW_REGISTRATION:-true}
+    volumes:
+      - ./data:/data
+    restart: unless-stopped

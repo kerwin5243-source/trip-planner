@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# 同步伺服器
+server/data
+server/client-dist
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

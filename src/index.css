@@ -1125,6 +1125,34 @@ body {
   cursor: pointer;
 }
 
+/* ===== 帳號與同步 ===== */
+.account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.account-email {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.sync-message {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.sync-message.ok {
+  color: var(--green);
+}
+
+.sync-message.warn {
+  color: var(--danger);
+}
+
 /* ===== 空狀態 ===== */
 .empty-state {
   text-align: center;

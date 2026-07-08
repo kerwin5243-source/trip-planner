@@ -12,6 +12,10 @@ export default function BottomNav() {
         <span className="nav-icon">🗺️</span>
         <span>世界地圖</span>
       </NavLink>
+      <NavLink to="/account" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <span className="nav-icon">👤</span>
+        <span>帳號</span>
+      </NavLink>
     </nav>
   );
 }

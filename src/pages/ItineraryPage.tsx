@@ -1,7 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import PlaceSearch from '../components/PlaceSearch';
 import { db, saveTrip } from '../db/db';
+import { fetchDailyWeather, weatherMeta, type DayWeather } from '../lib/geo';
 import {
   itineraryTypeMeta,
   uuid,
@@ -30,6 +32,8 @@ const emptyDraft = {
   mapCode: '',
   url: '',
   isSplash: false,
+  lat: undefined as number | undefined,
+  lon: undefined as number | undefined,
 };
 
 type Draft = typeof emptyDraft;
@@ -123,7 +127,28 @@ function ItemForm({
       <details>
         <summary>更多欄位（地址、預約、注意事項…）</summary>
         <label>
+          地點搜尋（自動帶入地址與座標）
+          <PlaceSearch
+            placeholder="例如：清水寺"
+            onSelect={(p) =>
+              setDraft((d) => ({ ...d, address: p.name, lat: p.lat, lon: p.lon }))
+            }
+          />
+        </label>
+        <label>
           地址
+          {draft.lat !== undefined && (
+            <span className="hint" style={{ fontWeight: 400 }}>
+              📍 已定位，儲存後行程卡會出現「導航」按鈕{' '}
+              <button
+                type="button"
+                className="text-btn"
+                onClick={() => setDraft((d) => ({ ...d, lat: undefined, lon: undefined }))}
+              >
+                移除座標
+              </button>
+            </span>
+          )}
           <input type="text" value={draft.address} onChange={(e) => set('address', e.target.value)} />
         </label>
         <label>
@@ -178,6 +203,16 @@ export default function ItineraryPage() {
   const trip = useLiveQuery(async () => (id ? ((await db.trips.get(id)) ?? null) : null), [id]);
   const [dayIndex, setDayIndex] = useState(0);
   const [editing, setEditing] = useState<'new' | string | null>(null); // 'new' | itemId | null
+  const [weather, setWeather] = useState<Map<string, DayWeather>>(new Map());
+
+  // 有設定目的地就抓天氣預報（超出 16 天預報範圍的日期不會有資料）
+  const dest = trip?.destination;
+  useEffect(() => {
+    if (!trip || !dest) return;
+    fetchDailyWeather(dest.lat, dest.lon, trip.startDate, trip.endDate)
+      .then(setWeather)
+      .catch(() => {});
+  }, [dest, trip?.startDate, trip?.endDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (trip === undefined) return null;
   if (trip === null) {
@@ -230,21 +265,37 @@ export default function ItineraryPage() {
       </header>
 
       <nav className="day-tabs">
-        {trip.daySchedules.map((d, i) => (
-          <button
-            key={d.date}
-            type="button"
-            className={`day-tab ${i === safeDayIndex ? 'active' : ''}`}
-            onClick={() => {
-              setDayIndex(i);
-              setEditing(null);
-            }}
-          >
-            <span className="day-num">Day {i + 1}</span>
-            <span className="day-date">{formatDay(d.date)}</span>
-          </button>
-        ))}
+        {trip.daySchedules.map((d, i) => {
+          const w = weather.get(d.date);
+          return (
+            <button
+              key={d.date}
+              type="button"
+              className={`day-tab ${i === safeDayIndex ? 'active' : ''}`}
+              onClick={() => {
+                setDayIndex(i);
+                setEditing(null);
+              }}
+            >
+              <span className="day-num">Day {i + 1}</span>
+              <span className="day-date">{formatDay(d.date)}</span>
+              {w && (
+                <span className="day-weather" title={`${weatherMeta(w.code).label} ${w.tMin}–${w.tMax}°C`}>
+                  {weatherMeta(w.code).emoji} {w.tMax}°
+                </span>
+              )}
+            </button>
+          );
+        })}
       </nav>
+
+      {dest && weather.get(day.date) && (
+        <p className="weather-line">
+          📍 {dest.name.split(',')[0]} · {weatherMeta(weather.get(day.date)!.code).emoji}{' '}
+          {weatherMeta(weather.get(day.date)!.code).label} {weather.get(day.date)!.tMin}–
+          {weather.get(day.date)!.tMax}°C
+        </p>
+      )}
 
       {editing !== null ? (
         <ItemForm
@@ -278,6 +329,16 @@ export default function ItineraryPage() {
                   {item.url && (
                     <a href={item.url} target="_blank" rel="noreferrer" className="item-link">
                       🔗 網站
+                    </a>
+                  )}
+                  {item.lat !== undefined && item.lon !== undefined && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lon}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="item-link"
+                    >
+                      🧭 導航
                     </a>
                   )}
                 </div>

@@ -423,7 +423,9 @@ body {
   display: inline-block;
   font-size: 0.78rem;
   margin-top: 6px;
+  margin-right: 12px;
   color: var(--accent);
+  font-weight: 700;
 }
 
 .item-actions {
@@ -1123,6 +1125,72 @@ body {
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* ===== 地點搜尋與天氣 ===== */
+.place-search-row {
+  display: flex;
+  gap: 8px;
+}
+
+.place-search-row input {
+  flex: 1;
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-s);
+  background: var(--card-solid);
+  color: var(--ink);
+}
+
+.place-search-btn {
+  flex: 0 0 auto;
+  padding: 0 16px;
+}
+
+.place-results {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-s);
+  overflow: hidden;
+  background: var(--card-solid);
+}
+
+.place-results li + li {
+  border-top: 1px solid var(--border);
+}
+
+.place-results button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.place-results button:hover {
+  background: rgba(76, 127, 214, 0.08);
+}
+
+.day-weather {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.weather-line {
+  font-size: 0.82rem;
+  color: var(--ink2);
+  font-weight: 700;
+  margin: 0 0 12px;
 }
 
 /* ===== 帳號與同步 ===== */

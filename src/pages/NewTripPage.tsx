@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import PlaceSearch from '../components/PlaceSearch';
 import { saveTrip } from '../db/db';
 import { db } from '../db/db';
 import {
@@ -12,6 +13,7 @@ import {
   todayISO,
   type BackgroundType,
   type DaySchedule,
+  type PlaceRef,
   type TemplateType,
 } from '../models/types';
 
@@ -35,6 +37,7 @@ export default function NewTripPage() {
   const [endDate, setEndDate] = useState(todayISO());
   const [templateType, setTemplateType] = useState<TemplateType>('basic');
   const [backgroundType, setBackgroundType] = useState<BackgroundType>('ocean');
+  const [destination, setDestination] = useState<PlaceRef | undefined>(undefined);
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
 
@@ -46,6 +49,7 @@ export default function NewTripPage() {
       setEndDate(existing.endDate);
       setTemplateType(existing.templateType);
       setBackgroundType(existing.backgroundType);
+      setDestination(existing.destination);
       setLoaded(true);
     }
   }, [isEdit, existing, loaded]);
@@ -99,6 +103,7 @@ export default function NewTripPage() {
         endDate,
         templateType,
         backgroundType,
+        destination,
         daySchedules,
       });
       navigate(`/trip/${existing.id}`, { replace: true });
@@ -110,7 +115,7 @@ export default function NewTripPage() {
         templateType,
         backgroundType,
       });
-      await saveTrip(trip);
+      await saveTrip({ ...trip, destination });
       navigate(`/trip/${trip.id}`, { replace: true });
     }
   }
@@ -160,6 +165,24 @@ export default function NewTripPage() {
             ))}
           </select>
         </label>
+
+        <fieldset className="bg-picker">
+          <legend>目的地（選填，行程表會顯示當地天氣預報）</legend>
+          {destination ? (
+            <div className="member-chips" style={{ marginBottom: 0 }}>
+              <button
+                type="button"
+                className="member-chip visited-chip"
+                onClick={() => setDestination(undefined)}
+                title="點一下移除"
+              >
+                📍 {destination.name.split(',')[0]} ✕
+              </button>
+            </div>
+          ) : (
+            <PlaceSearch placeholder="搜尋城市，例如：京都" onSelect={setDestination} />
+          )}
+        </fieldset>
 
         <fieldset className="bg-picker">
           <legend>背景主題</legend>

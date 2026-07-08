@@ -22,6 +22,13 @@ export type BackgroundType =
 /** 行程種類 (景點、交通、住宿、餐廳) */
 export type ItineraryItemType = 'attraction' | 'transport' | 'accommodation' | 'restaurant';
 
+/** 地點參照（Nominatim 搜尋結果） */
+export interface PlaceRef {
+  name: string;
+  lat: number;
+  lon: number;
+}
+
 /** 單一行程項目 (卡片) */
 export interface ItineraryItem {
   id: string;
@@ -38,6 +45,8 @@ export interface ItineraryItem {
   mapCode: string; // MapCode
   url: string; // 網站連結
   isSplash: boolean; // 是否為重點行程
+  lat?: number; // 座標（地點搜尋帶入，供導航用）
+  lon?: number;
 }
 
 /** 旅行大綱 — 每日重點概覽 */
@@ -63,6 +72,7 @@ export interface Trip {
   customBackgroundPath?: string;
   startDate: string; // yyyy-MM-dd
   endDate: string; // yyyy-MM-dd
+  destination?: PlaceRef; // 目的地（天氣預報用）
   summaries: TripSummaryItem[];
   daySchedules: DaySchedule[];
   enabledModules: string[];

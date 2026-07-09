@@ -123,6 +123,10 @@ export default function TripDetailPage() {
         ))}
       </div>
 
+      <Link to={`/trip/${trip.id}/print`} className="btn-secondary print-link">
+        🖨️ 匯出 / 列印 PDF
+      </Link>
+
       <button type="button" className="btn-danger" onClick={handleDelete}>
         刪除這趟旅程
       </button>

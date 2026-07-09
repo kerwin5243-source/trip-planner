@@ -132,6 +132,12 @@ export default function NewTripPage() {
         <h1>{isEdit ? '編輯旅程' : '建立新旅程'}</h1>
       </header>
 
+      {!isEdit && (
+        <Link to="/ai-generate" className="ai-entry">
+          ✨ 懶得排？讓 AI 生成整趟行程 ›
+        </Link>
+      )}
+
       <form className="form" onSubmit={handleSubmit}>
         <label>
           旅程名稱

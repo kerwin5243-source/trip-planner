@@ -6,6 +6,7 @@ import { db, saveTrip } from '../db/db';
 import { fetchDailyWeather, weatherMeta, type DayWeather } from '../lib/geo';
 import { toast } from '../lib/toast';
 import {
+  addMinutes,
   itineraryTypeMeta,
   uuid,
   type ItineraryItem,
@@ -18,13 +19,6 @@ const weekdayNames = ['日', '一', '二', '三', '四', '五', '六'];
 function formatDay(dateISO: string): string {
   const d = new Date(`${dateISO}T00:00:00`);
   return `${d.getMonth() + 1}/${d.getDate()} (${weekdayNames[d.getDay()]})`;
-}
-
-/** "HH:mm" 加上分鐘數（超過午夜就繞回） */
-function addMinutes(time: string, minutes: number): string {
-  const [h, m] = time.split(':').map(Number);
-  const total = (h * 60 + m + minutes) % 1440;
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
 const emptyDraft = {
@@ -228,6 +222,7 @@ export default function ItineraryPage() {
   const [dayIndex, setDayIndex] = useState(0);
   const [editing, setEditing] = useState<'new' | string | null>(null); // 'new' | itemId | null
   const [weather, setWeather] = useState<Map<string, DayWeather>>(new Map());
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
 
   // 有設定目的地就抓天氣預報（超出 16 天預報範圍的日期不會有資料）
   const dest = trip?.destination;
@@ -252,23 +247,38 @@ export default function ItineraryPage() {
 
   const safeDayIndex = Math.min(dayIndex, trip.daySchedules.length - 1);
   const day = trip.daySchedules[safeDayIndex];
-  const sortedItems = [...day.items].sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime));
+  // 顯示順序 = 陣列順序（可拖曳自訂）；新項目加入時會按時間插入
+  const items = day.items;
 
-  async function updateDayItems(t: Trip, items: ItineraryItem[]) {
-    const daySchedules = t.daySchedules.map((d, i) => (i === safeDayIndex ? { ...d, items } : d));
+  async function updateDayItems(t: Trip, newItems: ItineraryItem[]) {
+    const daySchedules = t.daySchedules.map((d, i) =>
+      i === safeDayIndex ? { ...d, items: newItems } : d,
+    );
     await saveTrip({ ...t, daySchedules });
+  }
+
+  /** 依抵達時間找出插入位置 */
+  function insertByTime(list: ItineraryItem[], item: ItineraryItem): ItineraryItem[] {
+    const idx = list.findIndex((it) => it.arrivalTime > item.arrivalTime);
+    const copy = [...list];
+    copy.splice(idx === -1 ? copy.length : idx, 0, item);
+    return copy;
   }
 
   async function handleSave(draft: Draft, targetDayIdx: number) {
     const t = trip!;
-    const item: ItineraryItem =
-      editing === 'new'
-        ? { id: uuid(), ...draft }
-        : { ...day.items.find((it) => it.id === editing)!, ...draft };
-    // 從所有天移除同 id 的項目，再放進目標天（同天編輯與跨天搬移都適用）
+    const isNew = editing === 'new';
+    const item: ItineraryItem = isNew
+      ? { id: uuid(), ...draft }
+      : { ...day.items.find((it) => it.id === editing)!, ...draft };
+
     const daySchedules = t.daySchedules.map((d, i) => {
-      const items = d.items.filter((it) => it.id !== item.id);
-      return i === targetDayIdx ? { ...d, items: [...items, item] } : { ...d, items };
+      if (!isNew && i === safeDayIndex && i === targetDayIdx) {
+        // 同天編輯：原地更新，保留使用者拖出來的順序
+        return { ...d, items: d.items.map((it) => (it.id === item.id ? item : it)) };
+      }
+      const rest = d.items.filter((it) => it.id !== item.id);
+      return i === targetDayIdx ? { ...d, items: insertByTime(rest, item) } : { ...d, items: rest };
     });
     await saveTrip({ ...t, daySchedules });
     setEditing(null);
@@ -276,8 +286,24 @@ export default function ItineraryPage() {
       setDayIndex(targetDayIdx);
       toast(`已移到 Day ${targetDayIdx + 1}`);
     } else {
-      toast(editing === 'new' ? '已加入行程' : '已儲存');
+      toast(isNew ? '已加入行程' : '已儲存');
     }
+  }
+
+  async function handleReorder(fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx) return;
+    const copy = [...items];
+    const [moved] = copy.splice(fromIdx, 1);
+    copy.splice(toIdx, 0, moved);
+    await updateDayItems(trip!, copy);
+  }
+
+  async function handleSortByTime() {
+    await updateDayItems(
+      trip!,
+      [...items].sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime)),
+    );
+    toast('已依時間排序');
   }
 
   async function handleDelete(itemId: string) {
@@ -340,16 +366,40 @@ export default function ItineraryPage() {
         />
       ) : (
         <>
-          {sortedItems.length === 0 && (
+          {items.length === 0 && (
             <div className="empty-state">
               <p className="empty-emoji">🗓️</p>
               <p>Day {safeDayIndex + 1} 還沒有行程</p>
             </div>
           )}
 
+          {items.length > 1 && (
+            <div className="timeline-tools">
+              <span className="hint">☰ 長按拖曳可調整順序</span>
+              <button type="button" className="text-btn" onClick={handleSortByTime}>
+                依時間排序
+              </button>
+            </div>
+          )}
+
           <ul className="timeline">
-            {sortedItems.map((item, idx) => (
-              <li key={item.id} className="timeline-row">
+            {items.map((item, idx) => (
+              <li
+                key={item.id}
+                className={`timeline-row ${dragIdx === idx ? 'dragging' : ''}`}
+                draggable
+                onDragStart={(e) => {
+                  setDragIdx(idx);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (dragIdx !== null) handleReorder(dragIdx, idx);
+                  setDragIdx(null);
+                }}
+                onDragEnd={() => setDragIdx(null)}
+              >
                 <div className="timeline-time">
                   <span className="mono timeline-start">{item.arrivalTime}</span>
                   <span className="mono timeline-end">
@@ -358,7 +408,7 @@ export default function ItineraryPage() {
                 </div>
                 <div className="timeline-node">
                   <span className={`timeline-dot ${item.isSplash ? 'splash' : ''}`} />
-                  {idx < sortedItems.length - 1 && <span className="timeline-line" />}
+                  {idx < items.length - 1 && <span className="timeline-line" />}
                 </div>
                 <div className={`item-card timeline-card ${item.isSplash ? 'splash' : ''}`}>
                   <div className="item-body">
@@ -388,6 +438,9 @@ export default function ItineraryPage() {
                     )}
                   </div>
                   <div className="item-actions">
+                    <span className="drag-handle" aria-hidden="true">
+                      ☰
+                    </span>
                     <button type="button" onClick={() => setEditing(item.id)} aria-label="編輯">
                       ✏️
                     </button>

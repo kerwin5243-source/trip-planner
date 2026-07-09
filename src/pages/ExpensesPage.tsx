@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { db } from '../db/db';
+import { computeBalances } from '../lib/settle';
 import { toast } from '../lib/toast';
 import {
   createExpense,
@@ -251,18 +252,7 @@ function SettleUp({
   members: ExpenseMember[];
 }) {
   // balances[memberId][currency] = 已付 - 應分攤（正數 = 應收回）
-  const balances = new Map<string, Map<string, number>>();
-  const add = (memberId: string, currency: string, delta: number) => {
-    const byCurrency = balances.get(memberId) ?? new Map<string, number>();
-    byCurrency.set(currency, (byCurrency.get(currency) ?? 0) + delta);
-    balances.set(memberId, byCurrency);
-  };
-
-  for (const ex of expenses) {
-    const share = ex.amount / (ex.splitWithIds.length + 1); // +1 = 付款人本人
-    add(ex.paidById, ex.currency, ex.amount - share);
-    for (const id of ex.splitWithIds) add(id, ex.currency, -share);
-  }
+  const balances = computeBalances(expenses);
 
   const rows = members
     .map((m) => {
